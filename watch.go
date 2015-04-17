@@ -35,7 +35,7 @@ func Watch(path string, eventHandler func(id uint64, path string, flags []string
 
 	es := &fsevents.EventStream{
 		Paths:   []string{path},
-		Latency: 10 * time.Millisecond,
+		Latency: 50 * time.Millisecond,
 		Device:  dev,
 		Flags:   fsevents.FileEvents | fsevents.WatchRoot}
 	es.Start()

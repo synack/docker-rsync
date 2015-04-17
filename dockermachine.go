@@ -12,12 +12,7 @@ func Provision(machineName string) {
 		// install and run rsync daemon
 		`tce-load -wi rsync`,
 
-		// add init script
-		`echo "#/bin/sh" | sudo tee /var/lib/boot2docker/bootlocal.sh`,
-		`echo "sudo umount /Users" | sudo tee -a /var/lib/boot2docker/bootlocal.sh`,
-		`sudo chmod +x /var/lib/boot2docker/bootlocal.sh`,
-
-		// make changes live without rebooting
+		// disable boot2dockers builtin vboxfs
 		`sudo umount /Users || /bin/true`,
 	}
 
@@ -32,6 +27,7 @@ func Provision(machineName string) {
 }
 
 func RunSSHCommand(machineName, command string) (out []byte, err error) {
+	fmt.Println(`docker-machine ssh ` + machineName + ` '` + command + `'`)
 	return exec.Command("/bin/sh", "-c", `docker-machine ssh `+machineName+` '`+command+`'`).CombinedOutput()
 }
 

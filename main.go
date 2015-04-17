@@ -1,15 +1,17 @@
 package main
 
-// docker-rsync start synack-dev
-
-// switch to https://github.com/go-fsnotify/fsnotify once FSEvents is available
-
 import (
 	"fmt"
 	"os"
+	pathpkg "path"
 )
 
 func main() {
+	if len(os.Args) == 2 && os.Args[1] == "--version" {
+		fmt.Println(Version)
+		os.Exit(0)
+	}
+
 	path, err := os.Getwd()
 	if err != nil {
 		fmt.Println("error: unable to get current directory:", err)
@@ -30,9 +32,13 @@ func main() {
 	}
 
 	Provision(machineName)
-	PrepareSync(machineName, port, path, path)
-	Sync(machineName, port, path, path)
+
+	rpath := path
+	rpathDir := pathpkg.Dir(path)
+
+	PrepareSync(machineName, port, rpath, rpathDir)
+	Sync(machineName, port, path, pathpkg.Dir(path)) // initial sync
 	Watch(path, func(id uint64, path string, flags []string) {
-		Sync(machineName, port, path, path)
+		Sync(machineName, port, rpath, rpathDir)
 	})
 }
