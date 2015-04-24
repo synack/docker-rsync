@@ -1,13 +1,23 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	pathpkg "path"
 )
 
 func main() {
-	if len(os.Args) == 2 && os.Args[1] == "--version" {
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "usage: %v [-version|-initial] <machine-name>\n", os.Args[0])
+		flag.PrintDefaults()
+	}
+
+	var version = flag.Bool("version", false, "Print version")
+	var onetime = flag.Bool("1", false, "Sync only once")
+	flag.Parse()
+
+	if *version {
 		fmt.Println(Version)
 		os.Exit(0)
 	}
@@ -18,16 +28,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	if len(os.Args) != 2 || os.Args[1] == "" {
-		fmt.Printf("usage: %v <machine-name>\n", os.Args[0])
+	if len(flag.Args()) != 1 {
+		fmt.Printf("usage: %v [-version|-initial] <machine-name>\n", os.Args[0])
 		os.Exit(1)
 	}
 
-	machineName := os.Args[1]
+	machineName := flag.Args()[0]
 
 	port, err := GetSSHPort(machineName)
 	if err != nil {
-		fmt.Println("error: unable to get port:", err)
+		fmt.Printf("error: unable to get port for machine '%v': %v\n", machineName, err)
 		os.Exit(1)
 	}
 
@@ -38,7 +48,10 @@ func main() {
 
 	PrepareSync(machineName, port, rpath, rpathDir)
 	Sync(machineName, port, path, pathpkg.Dir(path)) // initial sync
-	Watch(path, func(id uint64, path string, flags []string) {
-		Sync(machineName, port, rpath, rpathDir)
-	})
+
+	if !*onetime {
+		Watch(path, func(id uint64, path string, flags []string) {
+			Sync(machineName, port, rpath, rpathDir)
+		})
+	}
 }
