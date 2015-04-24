@@ -12,8 +12,27 @@ func Provision(machineName string) {
 		// install and run rsync daemon
 		`tce-load -wi rsync`,
 
-		// disable boot2dockers builtin vboxfs
+		// disable boot2dockers builtin vboxsf
 		`sudo umount /Users || /bin/true`,
+	}
+
+	for _, v := range c {
+		out, err := RunSSHCommand(machineName, v)
+		if err != nil {
+			fmt.Println(err)
+			fmt.Printf("%s\n", out)
+			os.Exit(1)
+		}
+	}
+}
+
+func RestoreVBoxsf(machineName string) {
+	c := []string{
+		// disable rsync share
+		`sudo umount /Users || /bin/true`,
+
+		// restore vboxsf
+		`sudo /etc/rc.d/automount-shares || /bin/true`,
 	}
 
 	for _, v := range c {
