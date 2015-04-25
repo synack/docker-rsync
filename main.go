@@ -44,23 +44,6 @@ func main() {
 
 	Provision(machineName)
 
-	// catch ^C and restore vboxsf
-	hitCounter := 0
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		for range c {
-			if hitCounter > 0 {
-				os.Exit(1)
-			}
-
-			hitCounter += 1
-			fmt.Println()
-			RestoreVBoxsf(machineName)
-			os.Exit(0)
-		}
-	}()
-
 	rpath := path
 	rpathDir := pathpkg.Dir(path)
 
@@ -68,10 +51,29 @@ func main() {
 	Sync(machineName, port, path, pathpkg.Dir(path)) // initial sync
 
 	if !*onetime {
+
+		// catch ^C and restore vboxsf
+		hitCounter := 0
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt)
+		go func() {
+			for range c {
+				if hitCounter > 0 {
+					os.Exit(1)
+				}
+
+				hitCounter += 1
+				fmt.Println()
+				RestoreVBoxsf(machineName)
+				os.Exit(0)
+			}
+		}()
+
 		Watch(path, func(id uint64, path string, flags []string) {
 			Sync(machineName, port, rpath, rpathDir)
 		})
+	} else {
+		RestoreVBoxsf(machineName)
 	}
 
-	RestoreVBoxsf(machineName)
 }
