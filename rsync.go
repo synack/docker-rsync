@@ -8,34 +8,38 @@ import (
 	"strings"
 )
 
-func PrepareSync(machineName string, port uint, src, dst string) {
-	RunSSHCommand(machineName, "sudo mkdir -p "+dst)
-}
+var lastSyncError = ""
 
-func Sync(machineName string, port uint, src, dst string) {
-	homePath := os.Getenv("HOME")
-	ripath := getRsyncIgnorePath()
-
+func Sync(via string, port uint, src, dst string) {
 	args := []string{
+		// "--verbose",
+		// "--stats",
 		"--recursive",
 		"--links",
 		"--times",
 		"--inplace",
-		// "--verbose",
-		// "--stats",
 		"--itemize-changes",
 		"--delete",
 		"--force",
 		"--executability",
 		"--compress",
-		"--force",
-		fmt.Sprintf(`-e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet -i "%s" -p %v'`, filepath.Join(homePath, "/.docker/machine/machines", machineName, "id_rsa"), port),
-		"--rsync-path='sudo rsync'",
 	}
+
+	ripath := getRsyncIgnorePath()
 	if ripath != "" {
 		args = append(args, `--exclude-from='`+ripath+`'`)
 	}
-	args = append(args, src, "docker@localhost:"+dst)
+
+	if strings.HasPrefix(via, "rsync://") {
+		args = append(args, filepath.Join(src)+"/.")
+		args = append(args, via)
+	} else {
+		machineName := via
+		homePath := os.Getenv("HOME")
+		args = append(args, fmt.Sprintf(`-e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet -i "%s" -p %v'`, filepath.Join(homePath, "/.docker/machine/machines", machineName, "id_rsa"), port))
+		args = append(args, "--rsync-path='sudo rsync'")
+		args = append(args, src, "docker@localhost:"+dst)
+	}
 
 	command := "rsync " + strings.Join(args, " ")
 
@@ -46,7 +50,11 @@ func Sync(machineName string, port uint, src, dst string) {
 	cmd.Stderr = os.Stderr
 
 	if err := cmd.Run(); err != nil {
-		fmt.Printf("error: %v\n", err)
+		// don't show duplicate errors
+		if lastSyncError != err.Error() {
+			fmt.Printf("error: %v\n", err)
+		}
+		lastSyncError = err.Error()
 	}
 }
 
