@@ -7,17 +7,18 @@ import (
 	"os/exec"
 )
 
-func Provision(machineName string) {
+func Provision(machineName string, verbose bool) {
 	c := []string{
 		// install and run rsync daemon
 		`tce-load -wi rsync`,
 
 		// disable boot2dockers builtin vboxfs
-		`sudo umount /Users || /bin/true`,
+		// TODO bad idea, because you then can't use vboxfs anymore
+		// `sudo umount /Users || /bin/true`,
 	}
 
 	for _, v := range c {
-		out, err := RunSSHCommand(machineName, v)
+		out, err := RunSSHCommand(machineName, v, verbose)
 		if err != nil {
 			fmt.Println(err)
 			fmt.Printf("%s\n", out)
@@ -26,8 +27,10 @@ func Provision(machineName string) {
 	}
 }
 
-func RunSSHCommand(machineName, command string) (out []byte, err error) {
-	fmt.Println(`docker-machine ssh ` + machineName + ` '` + command + `'`)
+func RunSSHCommand(machineName, command string, verbose bool) (out []byte, err error) {
+	if verbose {
+		fmt.Println(`docker-machine ssh ` + machineName + ` '` + command + `'`)
+	}
 	return exec.Command("/bin/sh", "-c", `docker-machine ssh `+machineName+` '`+command+`'`).CombinedOutput()
 }
 

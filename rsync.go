@@ -10,7 +10,7 @@ import (
 
 var lastSyncError = ""
 
-func Sync(via string, port uint, src, dst string) {
+func Sync(via string, port uint, src, dst string, verbose bool) {
 	args := []string{
 		// "--verbose",
 		// "--stats",
@@ -46,7 +46,9 @@ func Sync(via string, port uint, src, dst string) {
 	// fmt.Println("/bin/sh", "-c", command)
 	cmd := exec.Command("/bin/sh", "-c", command)
 
-	cmd.Stdout = os.Stdout
+	if verbose {
+		cmd.Stdout = os.Stdout
+	}
 	cmd.Stderr = os.Stderr
 
 	if err := cmd.Run(); err != nil {
