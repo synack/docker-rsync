@@ -10,7 +10,7 @@ import (
 func Provision(machineName string, verbose bool) {
 	c := []string{
 		// install and run rsync daemon
-		`tce-load -wi rsync`,
+		`tce-load -wi rsync attr acl`,
 
 		// disable boot2dockers builtin vboxfs
 		// TODO bad idea, because you then can't use vboxfs anymore
