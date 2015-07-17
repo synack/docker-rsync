@@ -26,7 +26,7 @@ func main() {
 	var watch = flag.Bool("watch", true, "Watch source directory for changes")
 	var verbose = flag.Bool("verbose", false, "Verbose output")
 	var srcpath = flag.String("src", pwd, "Source directory")
-	var dstpath = flag.String("dst", pathpkg.Join("/rsync", pwd), "Destination directory")
+	var dstpath = flag.String("dst", pathpkg.Join("/home/rsync", pwd), "Destination directory")
 
 	flag.Parse()
 
