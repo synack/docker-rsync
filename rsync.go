@@ -43,8 +43,8 @@ func Sync(via string, port uint, src, dst string, verbose bool) {
 
 	command := "rsync " + strings.Join(args, " ")
 
-	// fmt.Println("/bin/sh", "-c", command)
-	cmd := exec.Command("/bin/sh", "-c", command)
+	// fmt.Println("sh", "-c", command)
+	cmd := exec.Command("sh", "-c", command)
 
 	if verbose {
 		cmd.Stdout = os.Stdout
