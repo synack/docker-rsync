@@ -1,10 +1,12 @@
-// +build darwin
+// +build windows
 
 package main
 
 import (
 	"flag"
 	"fmt"
+	"gopkg.in/fsnotify.v1"
+	"log"
 	"os"
 	pathpkg "path"
 	"strings"
@@ -68,9 +70,41 @@ func main() {
 
 		if *watch {
 			fmt.Println("Watching for file changes ...")
-			Watch(rpath, func(id uint64, path string, flags []string) {
-				Sync(rsyncEndpoint, 0, rpath, rpathDir, true)
-			})
+			watcher, err := fsnotify.NewWatcher()
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer watcher.Close()
+
+			done := make(chan bool)
+			go func() {
+				for {
+					select {
+					case event := <-watcher.Events:
+						log.Println("event:", event)
+						if event.Op&fsnotify.Create == fsnotify.Create {
+							Sync(rsyncEndpoint, 0, rpath, rpathDir, true)
+						}
+						if event.Op&fsnotify.Write == fsnotify.Write {
+							Sync(rsyncEndpoint, 0, rpath, rpathDir, true)
+						}
+						if event.Op&fsnotify.Remove == fsnotify.Remove {
+							Sync(rsyncEndpoint, 0, rpath, rpathDir, true)
+						}
+						if event.Op&fsnotify.Rename == fsnotify.Rename {
+							Sync(rsyncEndpoint, 0, rpath, rpathDir, true)
+						}
+					case err := <-watcher.Errors:
+						log.Println("error:", err)
+					}
+				}
+			}()
+
+			err = watcher.Add("/tmp/foo")
+			if err != nil {
+				log.Fatal(err)
+			}
+			<-done
 		}
 
 	} else {
@@ -90,10 +124,43 @@ func main() {
 
 		if *watch {
 			fmt.Println("Watching for file changes ...")
-			Watch(rpath, func(id uint64, path string, flags []string) {
-				Sync(machineName, port, rpath, rpathDir, true)
-			})
+			watcher, err := fsnotify.NewWatcher()
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer watcher.Close()
+
+			done := make(chan bool)
+			go func() {
+				for {
+					select {
+					case event := <-watcher.Events:
+						log.Println("event:", event)
+						if event.Op&fsnotify.Create == fsnotify.Create {
+							Sync(machineName, port, rpath, rpathDir, true)
+						}
+						if event.Op&fsnotify.Write == fsnotify.Write {
+							Sync(machineName, port, rpath, rpathDir, true)
+						}
+						if event.Op&fsnotify.Remove == fsnotify.Remove {
+							Sync(machineName, port, rpath, rpathDir, true)
+						}
+						if event.Op&fsnotify.Rename == fsnotify.Rename {
+							Sync(machineName, port, rpath, rpathDir, true)
+						}
+					case err := <-watcher.Errors:
+						log.Println("error:", err)
+					}
+				}
+			}()
+
+			err = watcher.Add("/tmp/foo")
+			if err != nil {
+				log.Fatal(err)
+			}
+			<-done
 		}
+
 	}
 
 }
