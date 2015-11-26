@@ -40,14 +40,26 @@ func GetSSHPort(machineName string) (port uint, err error) {
 		return 0, err
 	}
 
+	return PortFromMachineJSON(out)
+}
+
+func PortFromMachineJSON(jsonData []byte) (port uint, err error) {
 	var v struct {
 		Driver struct {
+			Driver struct {
+				SSHPort uint
+			}
 			SSHPort uint
 		}
 	}
 
-	if err := json.Unmarshal(out, &v); err != nil {
+	if err := json.Unmarshal(jsonData, &v); err != nil {
 		return 0, err
 	}
-	return v.Driver.SSHPort, nil
+
+	if v.Driver.SSHPort == 0 {
+		return v.Driver.Driver.SSHPort, nil
+	} else {
+		return v.Driver.SSHPort, nil
+	}
 }
