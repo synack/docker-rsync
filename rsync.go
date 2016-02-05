@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"strings"
 )
@@ -35,8 +36,11 @@ func Sync(via string, port uint, src, dst string, verbose bool) {
 		args = append(args, via)
 	} else {
 		machineName := via
-		homePath := os.Getenv("HOME")
-		args = append(args, fmt.Sprintf(`-e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet -i "%s" -p %v'`, filepath.Join(homePath, "/.docker/machine/machines", machineName, "id_rsa"), port))
+		u, err := user.Current()
+		if err != nil {
+			panic(fmt.Sprintf("Unable to load current user's profile: %s", err))
+		}
+		args = append(args, fmt.Sprintf(`-e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet -i "%s" -p %v'`, filepath.Join(u.HomeDir, "/.docker/machine/machines", machineName, "id_rsa"), port))
 		args = append(args, "--rsync-path='sudo rsync'")
 		args = append(args, src, "docker@localhost:"+dst)
 	}
