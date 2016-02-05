@@ -31,13 +31,13 @@ func RunSSHCommand(machineName, command string, verbose bool) (out []byte, err e
 	if verbose {
 		fmt.Println(`docker-machine ssh ` + machineName + ` '` + command + `'`)
 	}
-	return exec.Command("/bin/sh", "-c", `docker-machine ssh `+machineName+` '`+command+`'`).CombinedOutput()
+	return exec.Command("docker-machine", "ssh", machineName, command).CombinedOutput()
 }
 
 func GetSSHPort(machineName string) (port uint, err error) {
-	out, err := exec.Command("/bin/sh", "-c", `docker-machine inspect `+machineName).CombinedOutput()
+	out, err := exec.Command("docker-machine", "inspect", machineName).CombinedOutput()
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("%s", out)
 	}
 
 	return PortFromMachineJSON(out)
