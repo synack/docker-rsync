@@ -28,8 +28,6 @@ func Watch(path string, eventHandler func(id uint64, path string, flags []string
 	for {
 		select {
 		case event := <-w.Event:
-			fmt.Printf("Got event %#v\n\n", event)
-
 			if mask, ok := noteDescription[event.Mask]; ok {
 				go eventHandler(uint64(event.Mask), event.Name, []string{mask})
 			}
