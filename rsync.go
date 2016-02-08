@@ -9,7 +9,7 @@ import (
 
 var lastSyncError = ""
 
-func Sync(via string, port uint, src, dst string, verbose bool) {
+func Sync(via string, c SSHCredentials, src, dst string, verbose bool) {
 	args := []string{
 		// "--verbose",
 		// "--stats",
@@ -33,11 +33,9 @@ func Sync(via string, port uint, src, dst string, verbose bool) {
 		args = append(args, filepath.Join(src)+"/.")
 		args = append(args, via)
 	} else {
-		machineName := via
-		homePath := os.Getenv("HOME")
-		args = append(args, fmt.Sprintf(`-e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet -i "%s" -p %v'`, filepath.Join(homePath, "/.docker/machine/machines", machineName, "id_rsa"), port))
+		args = append(args, fmt.Sprintf(`-e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet -i "%s" -p %v'`, c.SSHKeyPath, c.SSHPort))
 		args = append(args, "--rsync-path='sudo rsync'")
-		args = append(args, src, "docker@localhost:"+dst)
+		args = append(args, src, fmt.Sprintf("%s@%s:%s", c.SSHUser, c.IPAddress, dst))
 	}
 
 	cmd := Exec("rsync", args...)

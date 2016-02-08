@@ -6,6 +6,13 @@ import (
 	"os"
 )
 
+type SSHCredentials struct {
+	IPAddress  string
+	SSHPort    uint
+	SSHUser    string
+	SSHKeyPath string
+}
+
 func Provision(machineName string, verbose bool) {
 	c := []string{
 		// install and run rsync daemon
@@ -33,32 +40,20 @@ func RunSSHCommand(machineName, command string, verbose bool) (out []byte, err e
 	return Exec("docker-machine", "ssh", machineName, command).CombinedOutput()
 }
 
-func GetSSHPort(machineName string) (port uint, err error) {
-	out, err := Exec("docker-machine", "inspect", machineName).CombinedOutput()
+func GetSSHCredentials(machineName string) (creds SSHCredentials, err error) {
+	out, err := Exec("docker-machine", "inspect", "--format='{{json .Driver}}'", machineName).CombinedOutput()
 	if err != nil {
-		return 0, err
+		return SSHCredentials{}, err
 	}
 
-	return PortFromMachineJSON(out)
+	return CredentialsFromMachineJSON(out)
 }
 
-func PortFromMachineJSON(jsonData []byte) (port uint, err error) {
-	var v struct {
-		Driver struct {
-			Driver struct {
-				SSHPort uint
-			}
-			SSHPort uint
-		}
-	}
-
+func CredentialsFromMachineJSON(jsonData []byte) (creds SSHCredentials, err error) {
+	var v SSHCredentials
 	if err := json.Unmarshal(jsonData, &v); err != nil {
-		return 0, err
+		return SSHCredentials{}, err
 	}
 
-	if v.Driver.SSHPort == 0 {
-		return v.Driver.Driver.SSHPort, nil
-	} else {
-		return v.Driver.SSHPort, nil
-	}
+	return v, nil
 }
