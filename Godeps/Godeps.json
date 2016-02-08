@@ -1,10 +1,14 @@
 {
-	"ImportPath": "github.com/mattes/docker-rsync",
+	"ImportPath": "github.com/synack/docker-rsync",
 	"GoVersion": "go1.4.2",
 	"Deps": [
 		{
 			"ImportPath": "github.com/mattes/fsevents",
 			"Rev": "38da907b88aa3480b3a6fef2772dfa3d2b39ea1c"
+		},
+		{
+			"ImportPath": "golang.org/x/exp/winfsnotify",
+			"Rev": "8f78588f428986c92002fbdb61c861ad1b6764c2"
 		}
 	]
 }
