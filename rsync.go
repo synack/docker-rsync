@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"os/user"
 	"path/filepath"
 	"strings"
@@ -45,10 +44,7 @@ func Sync(via string, port uint, src, dst string, verbose bool) {
 		args = append(args, src, "docker@localhost:"+dst)
 	}
 
-	command := "rsync " + strings.Join(args, " ")
-
-	// fmt.Println("/bin/sh", "-c", command)
-	cmd := exec.Command("/bin/sh", "-c", command)
+	cmd := Exec("rsync", args...)
 
 	if verbose {
 		cmd.Stdout = os.Stdout
