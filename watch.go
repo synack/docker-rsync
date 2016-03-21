@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/mattes/fsevents"
+	"github.com/fsnotify/fsevents"
 	"sort"
 	"time"
 )
