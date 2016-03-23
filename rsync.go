@@ -10,7 +10,7 @@ import (
 
 var lastSyncError = ""
 
-func Sync(via string, port uint, src, dst string, verbose bool) {
+func Sync(via string, port uint, src, dst string, nodelete bool, verbose bool) {
 	args := []string{
 		// "--verbose",
 		// "--stats",
@@ -19,7 +19,6 @@ func Sync(via string, port uint, src, dst string, verbose bool) {
 		"--times",
 		"--inplace",
 		"--itemize-changes",
-		"--delete",
 		"--force",
 		"--executability",
 		"--compress",
@@ -39,6 +38,10 @@ func Sync(via string, port uint, src, dst string, verbose bool) {
 		args = append(args, fmt.Sprintf(`-e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet -i "%s" -p %v'`, filepath.Join(homePath, "/.docker/machine/machines", machineName, "id_rsa"), port))
 		args = append(args, "--rsync-path='sudo rsync'")
 		args = append(args, src, "docker@localhost:"+dst)
+	}
+
+	if ! nodelete {
+		args = append(args, "--delete")
 	}
 
 	command := "rsync " + strings.Join(args, " ")
