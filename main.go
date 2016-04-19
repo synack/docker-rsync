@@ -62,12 +62,12 @@ func main() {
 		rsyncEndpoint := via
 
 		fmt.Printf("Syncing %s (local) to %s (%s)\n", *srcpath, *dstpath, rsyncEndpoint)
-		Sync(rsyncEndpoint, 0, rpath, rpathDir, *verbose) // initial sync
+		Sync(rsyncEndpoint, SSHCredentials{}, rpath, rpathDir, *verbose) // initial sync
 
 		if *watch {
 			fmt.Println("Watching for file changes ...")
 			Watch(rpath, func(id uint64, path string, flags []string) {
-				Sync(rsyncEndpoint, 0, rpath, rpathDir, true)
+				Sync(rsyncEndpoint, SSHCredentials{}, rpath, rpathDir, true)
 			})
 		}
 
@@ -75,7 +75,7 @@ func main() {
 		// use rsync via ssh
 		machineName := via
 
-		port, err := GetSSHPort(machineName)
+		c, err := GetSSHCredentials(machineName)
 		if err != nil {
 			fmt.Printf("error: unable to get port for machine '%v': %v\n", machineName, err)
 			os.Exit(1)
@@ -84,12 +84,12 @@ func main() {
 		Provision(machineName, *verbose)
 		RunSSHCommand(machineName, "sudo mkdir -p "+rpathDir, *verbose)
 		fmt.Printf("Syncing %s (local) to %s (docker-machine %s)\n", *srcpath, *dstpath, machineName)
-		Sync(machineName, port, rpath, rpathDir, *verbose) // initial sync
+		Sync(machineName, c, rpath, rpathDir, *verbose) // initial sync
 
 		if *watch {
 			fmt.Println("Watching for file changes ...")
 			Watch(rpath, func(id uint64, path string, flags []string) {
-				Sync(machineName, port, rpath, rpathDir, true)
+				Sync(machineName, c, rpath, rpathDir, true)
 			})
 		}
 	}
