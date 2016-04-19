@@ -31,7 +31,7 @@ brew install docker-machine
 docker-machine create my-machine123 -d virtualbox
 
 cd sync-this-directory
-echo "git" >> .rsyncignore
+echo ".git" >> .rsyncignore
 
 docker-rsync my-machine123
 ```
@@ -41,7 +41,7 @@ docker-rsync my-machine123
 
 ```bash
 cd sync-this-directory
-echo "git" >> .rsyncignore
+echo ".git" >> .rsyncignore
 
 docker-rsync rsync://<IP:PORT>/<MODULE>
 ```
