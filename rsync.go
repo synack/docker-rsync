@@ -9,7 +9,7 @@ import (
 
 var lastSyncError = ""
 
-func Sync(via string, port uint, src, dst string, nodelete bool, verbose bool) {
+func Sync(via string, c SSHCredentials, src, dst string, nodelete bool, verbose bool) {
 	args := []string{
 		// "--verbose",
 		// "--stats",
