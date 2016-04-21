@@ -27,6 +27,7 @@ func main() {
 	var verbose = flag.Bool("verbose", false, "Verbose output")
 	var srcpath = flag.String("src", pwd, "Source directory")
 	var dstpath = flag.String("dst", pathpkg.Join("/rsync", pwd), "Destination directory")
+	var nodelete = flag.Bool("nodelete", false, "Don't delete pre-existing files in destination")
 
 	flag.Parse()
 
@@ -62,12 +63,12 @@ func main() {
 		rsyncEndpoint := via
 
 		fmt.Printf("Syncing %s (local) to %s (%s)\n", *srcpath, *dstpath, rsyncEndpoint)
-		Sync(rsyncEndpoint, SSHCredentials{}, rpath, rpathDir, *verbose) // initial sync
+		Sync(rsyncEndpoint, SSHCredentials{}, rpath, rpathDir, *nodelete, *verbose) // initial sync
 
 		if *watch {
 			fmt.Println("Watching for file changes ...")
 			Watch(rpath, func(id uint64, path string, flags []string) {
-				Sync(rsyncEndpoint, SSHCredentials{}, rpath, rpathDir, *verbose)
+			Sync(rsyncEndpoint, SSHCredentials{}, rpath, rpathDir, *nodelete, *verbose)
 			})
 		}
 
@@ -83,13 +84,18 @@ func main() {
 
 		Provision(machineName, *verbose)
 		RunSSHCommand(machineName, "sudo mkdir -p "+rpathDir, *verbose)
-		fmt.Printf("Syncing %s (local) to %s (docker-machine %s)\n", *srcpath, *dstpath, machineName)
-		Sync(machineName, c, rpath, rpathDir, *verbose) // initial sync
+		if *nodelete {
+			fmt.Printf("Copying")
+		} else {
+			fmt.Printf("Syncing")
+		}
+		fmt.Printf(" %s (local) to %s (docker-machine %s)\n", *srcpath, *dstpath, machineName)
+		Sync(machineName, c, rpath, rpathDir, *nodelete, *verbose) // initial sync
 
 		if *watch {
 			fmt.Println("Watching for file changes ...")
 			Watch(rpath, func(id uint64, path string, flags []string) {
-				Sync(machineName, c, rpath, rpathDir, *verbose)
+			Sync(machineName, c, rpath, rpathDir, *nodelete, *verbose)
 			})
 		}
 	}

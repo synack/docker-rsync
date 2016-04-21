@@ -9,7 +9,7 @@ import (
 
 var lastSyncError = ""
 
-func Sync(via string, c SSHCredentials, src, dst string, verbose bool) {
+func Sync(via string, c SSHCredentials, src, dst string, nodelete bool, verbose bool) {
 	args := []string{
 		// "--verbose",
 		// "--stats",
@@ -19,7 +19,6 @@ func Sync(via string, c SSHCredentials, src, dst string, verbose bool) {
 		"--times",
 		"--inplace",
 		"--itemize-changes",
-		"--delete",
 		"--force",
 		"--executability",
 		"--compress",
@@ -37,6 +36,10 @@ func Sync(via string, c SSHCredentials, src, dst string, verbose bool) {
 		args = append(args, fmt.Sprintf(`-e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet -i "%s" -p %v'`, c.SSHKeyPath, c.SSHGuestPort))
 		args = append(args, "--rsync-path='sudo rsync'")
 		args = append(args, src, fmt.Sprintf("%s@%s:%s", c.SSHUser, c.IPAddress, dst))
+	}
+
+	if ! nodelete {
+		args = append(args, "--delete")
 	}
 
 	cmd := Exec("rsync", args...)
