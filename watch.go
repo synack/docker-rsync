@@ -41,9 +41,8 @@ func Watch(path string, eventHandler func(id uint64, path string, flags []string
 	es.Start()
 	ec := es.Events
 
-	for {
-		select {
-		case event := <-ec:
+	for msg := range ec {
+		for _, event := range msg {
 			flags := make([]string, 0)
 			for bit, description := range noteDescription {
 				if event.Flags&bit == bit {
@@ -53,7 +52,6 @@ func Watch(path string, eventHandler func(id uint64, path string, flags []string
 			sort.Sort(sort.StringSlice(flags))
 			go eventHandler(event.ID, event.Path, flags)
 
-			es.Flush(false)
 		}
 	}
 }

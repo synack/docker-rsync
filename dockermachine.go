@@ -4,25 +4,51 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 )
 
-func Provision(machineName string, verbose bool) {
-	c := []string{
-		// install and run rsync daemon
-		`tce-load -wi rsync attr acl`,
+type SSHCredentials struct {
+	IPAddress    string
+	SSHHostPort  uint `json:"SSHPort"`
+	SSHGuestPort uint // 22 per default
+	SSHUser      string
+	SSHKeyPath   string
+}
 
-		// disable boot2dockers builtin vboxfs
-		// TODO bad idea, because you then can't use vboxfs anymore
-		// `sudo umount /Users || /bin/true`,
+func needsProvisioning(machineName string, verbose bool) bool {
+	checkCommands := []string{
+		`which rsync attr`,
 	}
 
-	for _, v := range c {
-		out, err := RunSSHCommand(machineName, v, verbose)
-		if err != nil {
-			fmt.Println(err)
-			fmt.Printf("%s\n", out)
-			os.Exit(1)
+	for _, command := range checkCommands {
+		if _, err := RunSSHCommand(machineName, command, verbose); err != nil {
+			if verbose {
+				fmt.Println("Provisioning the docker-machine")
+			}
+			return true
+		}
+	}
+
+	return false
+}
+
+func Provision(machineName string, verbose bool) {
+	if needsProvisioning(machineName, verbose) {
+		c := []string{
+			// install and run rsync daemon
+			`tce-load -wi rsync attr acl`,
+
+			// disable boot2dockers builtin vboxfs
+			// TODO bad idea, because you then can't use vboxfs anymore
+			// `sudo umount /Users || /bin/true`,
+		}
+
+		for _, v := range c {
+			out, err := RunSSHCommand(machineName, v, verbose)
+			if err != nil {
+				fmt.Println(err)
+				fmt.Printf("%s\n", out)
+				os.Exit(1)
+			}
 		}
 	}
 }
@@ -31,35 +57,23 @@ func RunSSHCommand(machineName, command string, verbose bool) (out []byte, err e
 	if verbose {
 		fmt.Println(`docker-machine ssh ` + machineName + ` '` + command + `'`)
 	}
-	return exec.Command("/bin/sh", "-c", `docker-machine ssh `+machineName+` '`+command+`'`).CombinedOutput()
+	return Exec("docker-machine", "ssh", machineName, command).CombinedOutput()
 }
 
-func GetSSHPort(machineName string) (port uint, err error) {
-	out, err := exec.Command("/bin/sh", "-c", `docker-machine inspect `+machineName).CombinedOutput()
+func GetSSHCredentials(machineName string) (creds SSHCredentials, err error) {
+	out, err := Exec("docker-machine", "inspect", "--format='{{json .Driver}}'", machineName).CombinedOutput()
 	if err != nil {
-		return 0, err
+		return SSHCredentials{}, err
 	}
 
-	return PortFromMachineJSON(out)
+	return CredentialsFromMachineJSON(out)
 }
 
-func PortFromMachineJSON(jsonData []byte) (port uint, err error) {
-	var v struct {
-		Driver struct {
-			Driver struct {
-				SSHPort uint
-			}
-			SSHPort uint
-		}
-	}
-
+func CredentialsFromMachineJSON(jsonData []byte) (creds SSHCredentials, err error) {
+	var v SSHCredentials
 	if err := json.Unmarshal(jsonData, &v); err != nil {
-		return 0, err
+		return SSHCredentials{}, err
 	}
-
-	if v.Driver.SSHPort == 0 {
-		return v.Driver.Driver.SSHPort, nil
-	} else {
-		return v.Driver.SSHPort, nil
-	}
+	v.SSHGuestPort = uint(22) // assume that this is the default SSH port
+	return v, nil
 }
