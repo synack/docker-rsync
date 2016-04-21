@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/mattes/fsevents"
+	"github.com/fsnotify/fsevents"
 )
 
 func main() {
@@ -26,9 +26,8 @@ func main() {
 	ec := es.Events
 
 	go func() {
-		for {
-			select {
-			case event := <-ec:
+		for msg := range ec {
+			for _, event := range msg {
 				logEvent(event)
 			}
 		}
