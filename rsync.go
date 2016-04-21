@@ -13,6 +13,7 @@ func Sync(via string, c SSHCredentials, src, dst string, verbose bool) {
 	args := []string{
 		// "--verbose",
 		// "--stats",
+		"--perms",
 		"--recursive",
 		"--links",
 		"--times",
