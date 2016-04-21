@@ -7,10 +7,11 @@ import (
 )
 
 type SSHCredentials struct {
-	IPAddress  string
-	SSHPort    uint
-	SSHUser    string
-	SSHKeyPath string
+	IPAddress    string
+	SSHHostPort  uint `json:"SSHPort"`
+	SSHGuestPort uint // 22 per default
+	SSHUser      string
+	SSHKeyPath   string
 }
 
 func needsProvisioning(machineName string, verbose bool) bool {
@@ -73,6 +74,6 @@ func CredentialsFromMachineJSON(jsonData []byte) (creds SSHCredentials, err erro
 	if err := json.Unmarshal(jsonData, &v); err != nil {
 		return SSHCredentials{}, err
 	}
-
+	v.SSHGuestPort = uint(22) // assume that this is the default SSH port
 	return v, nil
 }

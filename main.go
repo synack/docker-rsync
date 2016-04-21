@@ -67,7 +67,7 @@ func main() {
 		if *watch {
 			fmt.Println("Watching for file changes ...")
 			Watch(rpath, func(id uint64, path string, flags []string) {
-				Sync(rsyncEndpoint, SSHCredentials{}, rpath, rpathDir, true)
+				Sync(rsyncEndpoint, SSHCredentials{}, rpath, rpathDir, *verbose)
 			})
 		}
 
@@ -89,7 +89,7 @@ func main() {
 		if *watch {
 			fmt.Println("Watching for file changes ...")
 			Watch(rpath, func(id uint64, path string, flags []string) {
-				Sync(machineName, c, rpath, rpathDir, true)
+				Sync(machineName, c, rpath, rpathDir, *verbose)
 			})
 		}
 	}

@@ -34,7 +34,7 @@ func Sync(via string, c SSHCredentials, src, dst string, verbose bool) {
 		args = append(args, filepath.Join(src)+"/.")
 		args = append(args, via)
 	} else {
-		args = append(args, fmt.Sprintf(`-e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet -i "%s" -p %v'`, c.SSHKeyPath, c.SSHPort))
+		args = append(args, fmt.Sprintf(`-e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet -i "%s" -p %v'`, c.SSHKeyPath, c.SSHGuestPort))
 		args = append(args, "--rsync-path='sudo rsync'")
 		args = append(args, src, fmt.Sprintf("%s@%s:%s", c.SSHUser, c.IPAddress, dst))
 	}
@@ -42,6 +42,7 @@ func Sync(via string, c SSHCredentials, src, dst string, verbose bool) {
 	cmd := Exec("rsync", args...)
 
 	if verbose {
+		fmt.Printf("rsync %v\n", strings.Join(args, " "))
 		cmd.Stdout = os.Stdout
 	}
 	cmd.Stderr = os.Stderr
