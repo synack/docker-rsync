@@ -27,6 +27,7 @@ func main() {
 	var verbose = flag.Bool("verbose", false, "Verbose output")
 	var srcpath = flag.String("src", pwd, "Source directory")
 	var dstpath = flag.String("dst", pathpkg.Join("/rsync", pwd), "Destination directory")
+        var guestport = flag.Uint("guestport", 22, "SSH Guest Port for docker-machine")
 
 	flag.Parse()
 
@@ -75,7 +76,7 @@ func main() {
 		// use rsync via ssh
 		machineName := via
 
-		c, err := GetSSHCredentials(machineName)
+		c, err := GetSSHCredentials(machineName, *guestport)
 		if err != nil {
 			fmt.Printf("error: unable to get port for machine '%v': %v\n", machineName, err)
 			os.Exit(1)
