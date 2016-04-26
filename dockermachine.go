@@ -60,20 +60,20 @@ func RunSSHCommand(machineName, command string, verbose bool) (out []byte, err e
 	return Exec("docker-machine", "ssh", machineName, command).CombinedOutput()
 }
 
-func GetSSHCredentials(machineName string) (creds SSHCredentials, err error) {
+func GetSSHCredentials(machineName string, guestport uint) (creds SSHCredentials, err error) {
 	out, err := Exec("docker-machine", "inspect", "--format='{{json .Driver}}'", machineName).CombinedOutput()
 	if err != nil {
 		return SSHCredentials{}, err
 	}
 
-	return CredentialsFromMachineJSON(out)
+	return CredentialsFromMachineJSON(out, guestport)
 }
 
-func CredentialsFromMachineJSON(jsonData []byte) (creds SSHCredentials, err error) {
+func CredentialsFromMachineJSON(jsonData []byte, guestport uint) (creds SSHCredentials, err error) {
 	var v SSHCredentials
 	if err := json.Unmarshal(jsonData, &v); err != nil {
 		return SSHCredentials{}, err
 	}
-	v.SSHGuestPort = uint(22) // assume that this is the default SSH port
+	v.SSHGuestPort = uint(guestport)
 	return v, nil
 }
